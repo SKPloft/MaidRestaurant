@@ -19,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.behavior.PositionTracker;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
@@ -380,10 +381,27 @@ public class CookMaidDiagnostics {
         List<String> values = new ArrayList<>();
         for (int i = 0; i < Math.min(missing.size(), MAX_STACKS_PER_SECTION); i++) {
             Pair<StackPredicate, Integer> pair = missing.get(i);
-            values.add("predicate#" + i + " x" + pair.right());
+            values.add(describePredicate(pair.left()) + " x" + pair.right());
         }
         if (missing.size() > MAX_STACKS_PER_SECTION) values.add("..." + (missing.size() - MAX_STACKS_PER_SECTION) + " more");
         return values.toString();
+    }
+
+    private static String describePredicate(StackPredicate predicate) {
+        List<String> candidates = new ArrayList<>();
+        for (Item item : BuiltInRegistries.ITEM) {
+            ItemStack stack = new ItemStack(item);
+            if (predicate.test(stack)) {
+                candidates.add(BuiltInRegistries.ITEM.getKey(item).toString());
+                if (candidates.size() >= 4) break;
+            }
+        }
+        if (candidates.isEmpty()) {
+            return "predicate[unresolved]";
+        }
+        return candidates.size() == 1
+                ? candidates.getFirst()
+                : "predicate[" + String.join("|", candidates) + "]";
     }
 
     private static String describeStack(ItemStack stack) {
