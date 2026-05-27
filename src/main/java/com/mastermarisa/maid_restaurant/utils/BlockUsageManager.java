@@ -26,8 +26,20 @@ public class BlockUsageManager {
         return blockUsage.computeIfAbsent(encode(pos),(k)-> new PooledStringHashSet(2)).contains(uuid.toString());
     }
 
+    /** Returns whether the block is already claimed by the UUID without creating a claim entry. */
+    public static boolean isExistingUser(BlockPos pos, UUID uuid){
+        PooledStringHashSet users = blockUsage.get(encode(pos));
+        return users != null && users.contains(uuid.toString());
+    }
+
     public static int getUserCount(BlockPos pos){
         return blockUsage.computeIfAbsent(encode(pos),(k)-> new PooledStringHashSet(2)).size();
+    }
+
+    /** Returns the current claim count without creating a claim entry for untracked blocks. */
+    public static int getExistingUserCount(BlockPos pos){
+        PooledStringHashSet users = blockUsage.get(encode(pos));
+        return users == null ? 0 : users.size();
     }
 
     private static Long encode(BlockPos pos){
